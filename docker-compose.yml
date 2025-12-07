@@ -1,0 +1,57 @@
+services:
+  books:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: books
+    restart: unless-stopped
+    ports:
+      - "${DEV_ENV_HOST:-0.0.0.0}:8080:8080"
+    environment:
+      - BOOKS_DB_HOST=db
+      - BOOKS_DB_USER=root
+      - BOOKS_DB_PASSWORD=mysecretpassword
+      - BOOKS_DB_DATABASE=books
+      - BOOKS_DB_PORT=3306
+      - BOOKS_REDIS_DSN=redis:6379
+      - BOOKS_SERVER_PORT=8080
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./config.yaml:/app/config.yaml:ro
+
+  db:
+    image: mysql:8.0
+    container_name: books-db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: mysecretpassword
+      MYSQL_DATABASE: books
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-pmysecretpassword"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    ports:
+      - "${DEV_ENV_HOST:-0.0.0.0}:3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./migrations:/docker-entrypoint-initdb.d
+
+  redis:
+    image: redis:7-alpine
+    container_name: books-redis
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    ports:
+      - "${DEV_ENV_HOST:-0.0.0.0}:6379:6379"
+
+volumes:
+  db_data:

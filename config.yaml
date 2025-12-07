@@ -1,0 +1,28 @@
+# books API Configuration
+# This file can be overridden by environment variables with BOOKS_ prefix
+# Example: BOOKS_DB_HOST=localhost will override db.host
+
+# Database configuration
+db:
+  host: "127.0.0.1"
+  user: "root"
+  password: "mysecretpassword"
+  database: "mysql"
+  port: 3306
+
+# Redis cache configuration
+redis:
+  dsn: "127.0.0.1:6379"
+
+# Server configuration
+server:
+  port: "8080"
+
+# Test database configuration (for testdata)
+test:
+  db:
+    host: "127.0.0.1"
+    user: "root"
+    password: "mysecretpassword"
+    database: "mysql"
+    port: 3306
