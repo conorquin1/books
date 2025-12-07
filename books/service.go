@@ -62,12 +62,6 @@ func (s *BookService) GetByID(ctx context.Context, id int64) (*Book, error) {
 			// Cache hit, return cached value
 			return &book, nil
 		}
-
-		// Check if it's a cache miss (expected) vs other error
-		if err != cache.ErrCacheMiss {
-			// Log non-cache-miss errors but continue to DB
-			// In production, you might want to log this
-		}
 	}
 
 	// Cache miss or error, fetch from database
@@ -105,12 +99,6 @@ func (s *BookService) GetAll(ctx context.Context, author *string, limit, offset 
 		if err == nil {
 			// Cache hit, return cached value
 			return books, nil
-		}
-
-		// Check if it's a cache miss (expected) vs other error
-		if err != cache.ErrCacheMiss {
-			// Log non-cache-miss errors but continue to DB
-			// In production, you might want to log this
 		}
 	}
 
