@@ -30,6 +30,35 @@ jobs:
   test:
     name: Test
     runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: mysecretpassword
+          MYSQL_DATABASE: mysql
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost -u root -pmysecretpassword"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd="redis-cli ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+    env:
+      BOOKS_TEST_DB_HOST: 127.0.0.1
+      BOOKS_TEST_DB_USER: root
+      BOOKS_TEST_DB_PASSWORD: mysecretpassword
+      BOOKS_TEST_DB_DATABASE: mysql
+      BOOKS_TEST_DB_PORT: 3306
+      BOOKS_REDIS_DSN: 127.0.0.1:6379
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -41,6 +70,22 @@ jobs:
 
       - name: Download dependencies
         run: go mod download
+
+      - name: Install MySQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y default-mysql-client
+
+      - name: Wait for MySQL to be ready
+        run: |
+          until mysqladmin ping -h 127.0.0.1 -u root -pmysecretpassword --silent; do
+            echo "Waiting for MySQL..."
+            sleep 2
+          done
+
+      - name: Create database table
+        run: |
+          mysql -h 127.0.0.1 -u root -pmysecretpassword mysql < migrations/001_create_books_table.sql
 
       - name: Run tests
         run: go test -v ./...
