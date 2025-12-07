@@ -98,16 +98,6 @@ func (s *Suite) Close() {
 	}
 }
 
-// DB returns the database connection
-func (s *Suite) DB() *sqlx.DB {
-	return s.db
-}
-
-// Cache returns the cache instance
-func (s *Suite) Cache() *cache.Cache {
-	return s.cache
-}
-
 // SetupAPI initializes the repository provider, service, and echo instance
 // Returns the echo instance, repository provider, and service for controller setup
 func (s *Suite) SetupAPI() (*echo.Echo, *mysql.RepositoryProvider, *books.BookService) {
@@ -120,31 +110,5 @@ func (s *Suite) SetupAPI() (*echo.Echo, *mysql.RepositoryProvider, *books.BookSe
 	s.echo = echo.New()
 
 	return s.echo, s.repoProvider, s.service
-}
-
-// Echo returns the echo instance (must call SetupAPI first)
-func (s *Suite) Echo() *echo.Echo {
-	if s.echo == nil {
-		s.t.Fatal("Echo not initialized. Call SetupAPI() first.")
-	}
-	return s.echo
-}
-
-// Clear empties test data from the database
-func (s *Suite) Clear() {
-	if s.db == nil {
-		return
-	}
-
-	// Clear books table
-	if _, err := s.db.Exec("DELETE FROM books"); err != nil {
-		s.t.Fatalf("Failed to clear books table: %v", err)
-	}
-	
-	// Reset auto increment
-	if _, err := s.db.Exec("ALTER TABLE books AUTO_INCREMENT = 1"); err != nil {
-		// Ignore error if table doesn't exist or doesn't have auto increment
-		s.t.Logf("Warning: Failed to reset auto increment: %v", err)
-	}
 }
 

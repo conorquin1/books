@@ -58,28 +58,6 @@ func (s *Suite) GetBook(id int64) *books.Book {
 	return &book
 }
 
-// GetAllBooks retrieves all books from the database, optionally filtered by author
-func (s *Suite) GetAllBooks(author *string) []books.Book {
-	if s.db == nil {
-		s.t.Fatal("Database not initialized. Call WithDB() first.")
-	}
-
-	var bookList []books.Book
-	var err error
-
-	if author != nil && *author != "" {
-		err = s.db.Select(&bookList, "SELECT * FROM books WHERE author = ? AND deletedAt IS NULL ORDER BY id", *author)
-	} else {
-		err = s.db.Select(&bookList, "SELECT * FROM books WHERE deletedAt IS NULL ORDER BY id")
-	}
-
-	if err != nil {
-		s.t.Fatalf("Failed to get books: %v", err)
-	}
-
-	return bookList
-}
-
 // ClearBooks clears all books from the database and clears related cache
 func (s *Suite) ClearBooks() {
 	if s.db == nil {
@@ -102,19 +80,4 @@ func (s *Suite) ClearBooks() {
 			s.t.Logf("Warning: Failed to flush Redis database: %v", err)
 		}
 	}
-}
-
-// BookCount returns the number of books in the database
-func (s *Suite) BookCount() int {
-	if s.db == nil {
-		s.t.Fatal("Database not initialized. Call WithDB() first.")
-	}
-
-	var count int
-	err := s.db.Get(&count, "SELECT COUNT(*) FROM books WHERE deletedAt IS NULL")
-	if err != nil {
-		s.t.Fatalf("Failed to count books: %v", err)
-	}
-
-	return count
 }
